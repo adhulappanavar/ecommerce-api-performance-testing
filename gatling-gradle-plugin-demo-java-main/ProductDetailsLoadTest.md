@@ -11,16 +11,32 @@ Validate the performance and stability of the `/api/products/1` endpoint under v
 
 ### Load Pattern Phases
 
-| Phase | Duration | Load Pattern | Description |
-|-------|----------|--------------|-------------|
-| **Phase 1** | 30 seconds | 0 → 10 users | Ramp up from 0 to 10 concurrent users |
-| **Phase 2** | 40 seconds | 10 users | Steady state at 10 users |
-| **Phase 3** | 10 seconds | 10 → 20 users | Peak load ramp up to 20 users |
-| **Phase 4** | 10 seconds | 20 users | Hold at peak load (20 users) |
-| **Phase 5** | 25 seconds | 10 users | Steady state at 10 users |
-| **Phase 6** | 50 seconds | 10 → 0 users | Gradual ramp down to 0 users |
+| Phase | Duration | Load Pattern | Description | Concurrent Users |
+|-------|----------|--------------|-------------|------------------|
+| **Phase 1** | 30 seconds | 0 → 10 users | Ramp up from 0 to 10 concurrent users | 0 → 10 |
+| **Phase 2** | 40 seconds | 10 users | Steady state at 10 users | **~10 sustained** |
+| **Phase 3** | 10 seconds | 10 → 20 users | Peak load ramp up to 20 users | 10 → 20 |
+| **Phase 4** | 10 seconds | 20 users | Hold at peak load (20 users) | **~20 sustained** |
+| **Phase 5** | 25 seconds | 10 users | Steady state at 10 users | **~10 sustained** |
+| **Phase 6** | 50 seconds | 10 → 0 users | Gradual ramp down to 0 users | 10 → 0 |
 
 **Total Test Duration**: ~165 seconds (2 minutes 45 seconds)
+
+### Key Improvement: Sustained Concurrent Users
+The load pattern now uses `constantUsersPerSec` with calculated rates to maintain sustained concurrent users throughout each phase, ensuring realistic performance testing even with fast API responses.
+
+#### Rate Calculation Methodology
+```
+Rate = Target Concurrent Users / (Response Time + Pause Time)
+Rate = 10 users / (0.032s + 2s) = ~4.9 users/sec
+
+Where:
+- Response Time: 32ms (average API response time)
+- Pause Time: 1-3 seconds (realistic user behavior)
+- Target: 10 concurrent users
+```
+
+This ensures that new users are injected at the right rate to maintain the desired concurrent user count throughout each phase.
 
 ## Code Implementation
 
@@ -99,13 +115,20 @@ setUp(
 - **99th Percentile**: 52ms
 
 ### Load Pattern Validation
-The test successfully executed all phases:
+The test successfully executed all phases with sustained concurrent users:
 - ✅ **Ramp Up**: 0 → 10 users over 30 seconds
-- ✅ **Steady State 1**: 10 users for 40 seconds
+- ✅ **Steady State 1**: **~10 concurrent users sustained** for 40 seconds
 - ✅ **Peak Load**: 10 → 20 users over 10 seconds
-- ✅ **Peak Hold**: 20 users for 10 seconds
-- ✅ **Steady State 2**: 10 users for 25 seconds
+- ✅ **Peak Hold**: **~20 concurrent users sustained** for 10 seconds
+- ✅ **Steady State 2**: **~10 concurrent users sustained** for 25 seconds
 - ✅ **Ramp Down**: 10 → 0 users over 50 seconds
+
+#### Concurrent User Evidence
+From test execution logs:
+- **Phase 2**: `waiting: 489-340, active: 10` - **10 concurrent users maintained**
+- **Phase 4**: `waiting: 229, active: 20` - **20 concurrent users maintained**
+- **Phase 5**: `waiting: 155-104, active: 8-12` - **~10 concurrent users maintained**
+- **Phase 6**: `waiting: 84-2, active: 8-1` - **Gradual ramp down maintained**
 
 ## API Endpoint Testing
 
@@ -183,6 +206,29 @@ cd gatling-gradle-plugin-demo-java-main
 - **Performance Regression**: Baseline for future performance testing
 - **Capacity Planning**: Understand system limits and behavior
 
+## Troubleshooting
+
+### Issue: No Sustained Concurrent Users
+**Problem**: Users complete requests too quickly, so no concurrent users are visible during steady state phases.
+
+**Solution**: Use `constantUsersPerSec` with calculated rates instead of `rampUsers` and `nothingFor`:
+
+```java
+// ❌ Wrong approach - users complete too quickly
+rampUsers(10).during(30),
+nothingFor(40),  // No sustained load
+
+// ✅ Correct approach - sustained concurrent users
+rampUsers(10).during(30),
+constantUsersPerSec(5.0).during(40),  // Maintains ~10 concurrent users
+```
+
+**Rate Calculation**:
+```
+Rate = Target Users / (Response Time + Pause Time)
+Rate = 10 / (0.032 + 2) = ~4.9 users/sec
+```
+
 ## Customization
 
 ### Modifying Load Pattern
@@ -190,7 +236,7 @@ To adjust the load pattern, modify the `injectOpen` section:
 ```java
 .injectOpen(
     rampUsers(5).during(20),        // Change ramp up users/duration
-    nothingFor(30),                 // Adjust steady state duration
+    constantUsersPerSec(2.5).during(30),  // Adjust steady state rate
     rampUsers(15).during(15),       // Modify peak load
     // ... other phases
 )
