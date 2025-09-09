@@ -30,14 +30,28 @@ public class ProductDetailsLoadTest extends Simulation {
         productDetailsScenario
             .injectOpen(
                 // Phase 1: Ramp up from 0 to 10 users in 30 seconds
-                rampUsers(10).during(30),
+                constantUsersPerSec(0.5).during(10),  // 0.5 users/sec for 10 seconds
+                constantUsersPerSec(1.0).during(10),  // 0.5 users/sec for 10 seconds
+                constantUsersPerSec(2.0).during(10), // 2 users/sec for 10 seconds
+                constantUsersPerSec(3.0).during(10), // 3 users/sec for 10 seconds
+                constantUsersPerSec(4.0).during(10), // 4 users/sec for 10 seconds
+                constantUsersPerSec(5.0).during(10), // 5 users/sec for 10 seconds
+                constantUsersPerSec(6.0).during(10), // 6 users/sec for 10 seconds
+                constantUsersPerSec(7.0).during(10), // 7 users/sec for 10 seconds
+                constantUsersPerSec(8.0).during(10), // 8 users/sec for 10 seconds
+                constantUsersPerSec(9.0).during(10), // 9 users/sec for 10 seconds
+                
+
+
+                // rampUsers(10).during(1),
                 
                 // Phase 2: Steady state at 10 users for 40 seconds
                 // Calculate rate: 10 users / (response_time + pause) = 10 / (0.032 + 2) = ~4.9 users/sec
-                constantUsersPerSec(5.0).during(40), // 5 users/sec to maintain ~10 concurrent users
+                constantUsersPerSec(10.0).during(40), // 5 users/sec to maintain ~10 concurrent users
                 
+                constantUsersPerSec(30.0).during(5), // 5 users/sec to maintain ~10 concurrent users
                 // Phase 3: Peak load - ramp from 10 to 20 users in 10 seconds
-                rampUsers(10).during(10), // Add 10 more users (10->20)
+                // rampUsers(10).during(10), // Add 10 more users (10->20)
                 
                 // Phase 4: Hold at 20 users for 10 seconds
                 constantUsersPerSec(10.0).during(10), // 10 users/sec to maintain ~20 concurrent users
