@@ -30,6 +30,7 @@ cd gatling-gradle-plugin-demo-java-main
 
 ## 📊 Performance Results
 
+### EcommerceSimulation Results
 | Metric | Target | Actual | Status |
 |--------|--------|--------|--------|
 | **Success Rate** | > 99.9% | **100%** | ✅ PASS |
@@ -37,6 +38,15 @@ cd gatling-gradle-plugin-demo-java-main
 | **Max Response Time** | < 1000ms | **307ms** | ✅ PASS |
 | **Throughput** | > 15 rps | **15.2 rps** | ✅ PASS |
 | **Concurrent Users** | 155 | **155** | ✅ PASS |
+
+### ProductDetailsLoadTest Results
+| Metric | Target | Actual | Status |
+|--------|--------|--------|--------|
+| **Success Rate** | > 99% | **100%** | ✅ PASS |
+| **Mean Response Time** | < 200ms | **32ms** | ✅ PASS |
+| **Max Response Time** | < 1000ms | **51ms** | ✅ PASS |
+| **Throughput** | Variable | **2.89 rps** | ✅ PASS |
+| **Test Duration** | 165 seconds | **165s** | ✅ PASS |
 
 ## 🏗️ Project Structure
 
@@ -58,6 +68,7 @@ cd gatling-gradle-plugin-demo-java-main
 
 ## 🧪 Test Scenarios
 
+### EcommerceSimulation
 The `EcommerceSimulation` tests a complete ecommerce user journey:
 
 1. **Customer Creation** - New user account creation
@@ -66,6 +77,16 @@ The `EcommerceSimulation` tests a complete ecommerce user journey:
 4. **Add to Cart** - Add products to shopping cart
 5. **View Cart** - Review cart contents
 6. **Checkout** - Complete the purchase
+
+### ProductDetailsLoadTest
+The `ProductDetailsLoadTest` tests the Product Details API with a complex multi-phase load pattern:
+
+1. **Ramp Up** - 0 to 10 users over 30 seconds
+2. **Steady State** - 10 users for 40 seconds
+3. **Peak Load** - 10 to 20 users over 10 seconds
+4. **Peak Hold** - 20 users for 10 seconds
+5. **Steady State** - 10 users for 25 seconds
+6. **Ramp Down** - 10 to 0 users over 50 seconds
 
 ## 📈 Load Test Configuration
 
