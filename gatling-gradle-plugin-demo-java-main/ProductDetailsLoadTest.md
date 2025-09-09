@@ -57,23 +57,25 @@ setUp(
             rampUsers(10).during(30),
             
             // Phase 2: Steady state at 10 users for 40 seconds
-            nothingFor(40),
+            // Calculate rate: 10 users / (response_time + pause) = 10 / (0.032 + 2) = ~4.9 users/sec
+            constantUsersPerSec(5.0).during(40), // 5 users/sec to maintain ~10 concurrent users
             
             // Phase 3: Peak load - ramp from 10 to 20 users in 10 seconds
-            rampUsers(10).during(10),
+            rampUsers(10).during(10), // Add 10 more users (10->20)
             
             // Phase 4: Hold at 20 users for 10 seconds
-            nothingFor(10),
+            constantUsersPerSec(10.0).during(10), // 10 users/sec to maintain ~20 concurrent users
             
             // Phase 5: Steady state at 10 users for 25 seconds
-            constantUsersPerSec(10).during(25),
+            constantUsersPerSec(5.0).during(25), // 5 users/sec to maintain ~10 concurrent users
             
             // Phase 6: Gradual ramp down from 10 to 0 users over 50 seconds
-            constantUsersPerSec(8).during(10),  // 8 users for 10 seconds
-            constantUsersPerSec(6).during(10),  // 6 users for 10 seconds
-            constantUsersPerSec(4).during(10),  // 4 users for 10 seconds
-            constantUsersPerSec(2).during(10),  // 2 users for 10 seconds
-            constantUsersPerSec(1).during(10)   // 1 user for 10 seconds
+            // Simulate ramp down by reducing users per second gradually
+            constantUsersPerSec(4.0).during(10), // 4 users/sec for 10 seconds
+            constantUsersPerSec(3.0).during(10), // 3 users/sec for 10 seconds
+            constantUsersPerSec(2.0).during(10), // 2 users/sec for 10 seconds
+            constantUsersPerSec(1.0).during(10), // 1 user/sec for 10 seconds
+            constantUsersPerSec(0.5).during(10)  // 0.5 users/sec for 10 seconds
         )
 )
 ```
@@ -85,16 +87,16 @@ setUp(
 | Metric | Target | Actual | Status |
 |--------|--------|--------|--------|
 | **Success Rate** | > 99% | **100%** | ✅ PASS |
-| **Mean Response Time** | < 200ms | **32ms** | ✅ PASS |
-| **Max Response Time** | < 1000ms | **51ms** | ✅ PASS |
-| **Throughput** | Variable | **2.89 rps** | ✅ PASS |
-| **Total Requests** | 480 | **480** | ✅ PASS |
+| **Mean Response Time** | < 200ms | **31ms** | ✅ PASS |
+| **Max Response Time** | < 1000ms | **63ms** | ✅ PASS |
+| **Throughput** | Variable | **3.33 rps** | ✅ PASS |
+| **Total Requests** | 550 | **550** | ✅ PASS |
 
 ### Response Time Distribution
 - **50th Percentile**: 32ms
-- **75th Percentile**: 40ms
-- **95th Percentile**: 46ms
-- **99th Percentile**: 49ms
+- **75th Percentile**: 39ms
+- **95th Percentile**: 45ms
+- **99th Percentile**: 52ms
 
 ### Load Pattern Validation
 The test successfully executed all phases:
